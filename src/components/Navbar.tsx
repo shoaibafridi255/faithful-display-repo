@@ -88,8 +88,14 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-card">
-                  <DropdownMenuLabel className="truncate max-w-[200px]">{user.email}</DropdownMenuLabel>
+                  <DropdownMenuLabel className="truncate max-w-[200px]">
+                    {user.email}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    My Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
@@ -145,9 +151,14 @@ const Navbar = () => {
               </Link>
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 {user ? (
-                  <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); handleSignOut(); }}>
-                    <LogOut className="w-4 h-4 mr-2" /> Sign Out
-                  </Button>
+                  <>
+                    <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); navigate("/profile"); }}>
+                      <User className="w-4 h-4 mr-2" /> My Profile
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); handleSignOut(); }}>
+                      <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); navigate("/auth"); }}>
