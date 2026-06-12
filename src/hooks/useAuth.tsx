@@ -4,6 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Role = "lister" | "seeker" | "admin" | null;
 
+const pickRole = (rows: { role: string }[] | null): Role => {
+  if (!rows || rows.length === 0) return null;
+  const roles = rows.map((r) => r.role);
+  if (roles.includes("admin")) return "admin";
+  if (roles.includes("lister")) return "lister";
+  if (roles.includes("seeker")) return "seeker";
+  return null;
+};
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
@@ -26,14 +35,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
-        // Defer role fetch to avoid deadlocks
         setTimeout(() => {
           supabase
             .from("user_roles")
             .select("role")
             .eq("user_id", newSession.user.id)
-            .maybeSingle()
-            .then(({ data }) => setRole((data?.role as Role) ?? null));
+            .then(({ data }) => setRole(pickRole(data as any)));
         }, 0);
       } else {
         setRole(null);
@@ -49,8 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .from("user_roles")
           .select("role")
           .eq("user_id", existing.user.id)
-          .maybeSingle()
-          .then(({ data }) => setRole((data?.role as Role) ?? null));
+          .then(({ data }) => setRole(pickRole(data as any)));
       }
       setLoading(false);
     });
