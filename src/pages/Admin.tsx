@@ -67,11 +67,12 @@ interface ConversationRow {
 const Admin = () => {
   const { user, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<(ProfileRow & { role?: string })[]>([]);
+  const [users, setUsers] = useState<(ProfileRow & { role?: string; roles?: string[] })[]>([]);
   const [materials, setMaterials] = useState<MaterialRow[]>([]);
   const [conversations, setConversations] = useState<ConversationRow[]>([]);
   const [messageCount, setMessageCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && (!user || role !== "admin")) {
@@ -91,12 +92,16 @@ const Admin = () => {
       const { data: roles } = await supabase
         .from("user_roles")
         .select("user_id, role");
-      const roleMap = new Map(
-        (roles ?? []).map((r) => [r.user_id, r.role])
-      );
+      const rolesByUser = new Map<string, string[]>();
+      (roles ?? []).forEach((r) => {
+        rolesByUser.set(r.user_id, [...(rolesByUser.get(r.user_id) ?? []), r.role]);
+      });
+      const getPrimaryRole = (userRoles: string[] = []) =>
+        userRoles.includes("admin") ? "admin" : userRoles.includes("lister") ? "lister" : userRoles.includes("seeker") ? "seeker" : "unknown";
       const enrichedUsers = (profiles ?? []).map((p) => ({
         ...p,
-        role: roleMap.get(p.id) ?? "unknown",
+        roles: rolesByUser.get(p.id) ?? [],
+        role: getPrimaryRole(rolesByUser.get(p.id)),
       }));
       setUsers(enrichedUsers);
 
@@ -191,6 +196,26 @@ const Admin = () => {
     }
     setMaterials((prev) => prev.filter((m) => m.id !== id));
     toast.success("Material deleted");
+  };
+
+  const handleMakeAdmin = async (profileId: string) => {
+    const target = users.find((u) => u.id === profileId);
+    if (target?.roles?.includes("admin")) return;
+    setUpdatingRoleId(profileId);
+    const { error } = await supabase.from("user_roles").insert({ user_id: profileId, role: "admin" });
+    setUpdatingRoleId(null);
+    if (error) {
+      toast.error("Failed to assign admin role");
+      return;
+    }
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === profileId
+          ? { ...u, roles: Array.from(new Set([...(u.roles ?? []), "admin"])), role: "admin" }
+          : u
+      )
+    );
+    toast.success("Admin role assigned");
   };
 
   if (authLoading || role !== "admin") return null;
@@ -407,6 +432,7 @@ const Admin = () => {
                           <th className="py-2 px-3">Location</th>
                           <th className="py-2 px-3">Role</th>
                           <th className="py-2 px-3">Joined</th>
+                          <th className="py-2 px-3">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -432,6 +458,20 @@ const Admin = () => {
                             </td>
                             <td className="py-2 px-3 text-muted-foreground">
                               {new Date(u.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="py-2 px-3">
+                              {u.role === "admin" ? (
+                                <Badge variant="outline">Admin active</Badge>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={updatingRoleId === u.id}
+                                  onClick={() => handleMakeAdmin(u.id)}
+                                >
+                                  Make Admin
+                                </Button>
+                              )}
                             </td>
                           </tr>
                         ))}

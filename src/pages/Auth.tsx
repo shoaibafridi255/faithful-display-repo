@@ -21,7 +21,7 @@ const signUpSchema = signInSchema.extend({
   fullName: z.string().trim().min(1, "Name is required").max(100),
   company: z.string().trim().max(100).optional(),
   location: z.string().trim().max(100).optional(),
-  role: z.enum(["lister", "seeker"]),
+  role: z.enum(["lister", "seeker", "admin"]),
 });
 
 const Auth = () => {
@@ -29,6 +29,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const initialTab = searchParams.get("mode") === "signup" ? "signup" : "signin";
+  const initialRole = searchParams.get("role") === "admin" ? "admin" : "seeker";
   const [tab, setTab] = useState(initialTab);
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,7 +39,19 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
-  const [role, setRole] = useState<"lister" | "seeker">("seeker");
+  const [role, setRole] = useState<"lister" | "seeker" | "admin">(initialRole);
+
+  const ensureProfileAndRole = async (signedInUser: { id: string; user_metadata?: Record<string, unknown> }) => {
+    const metadata = signedInUser.user_metadata ?? {};
+    const requestedRole = (metadata.role as "lister" | "seeker" | "admin" | undefined) ?? role;
+    await supabase.from("profiles").upsert({
+      id: signedInUser.id,
+      full_name: (metadata.full_name as string | undefined) ?? fullName,
+      company: (metadata.company as string | undefined) ?? company,
+      location: (metadata.location as string | undefined) ?? location,
+    });
+    await supabase.from("user_roles").insert({ user_id: signedInUser.id, role: requestedRole });
+  };
 
   useEffect(() => {
     if (!authLoading && user) navigate("/", { replace: true });
@@ -52,7 +65,7 @@ const Auth = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     });
@@ -61,6 +74,7 @@ const Auth = () => {
       toast.error(error.message);
       return;
     }
+    if (data.user) await ensureProfileAndRole(data.user);
     toast.success("Welcome back!");
     navigate("/");
   };
@@ -73,7 +87,7 @@ const Auth = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
@@ -91,7 +105,12 @@ const Auth = () => {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created! Check your email to confirm.");
+    if (data.user && data.session) await ensureProfileAndRole(data.user);
+    toast.success(
+      parsed.data.role === "admin"
+        ? "Admin account request created. Sign in after email confirmation."
+        : "Account created! Check your email to confirm."
+    );
     setTab("signin");
   };
 
@@ -169,7 +188,7 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>I am a</Label>
-                  <RadioGroup value={role} onValueChange={(v) => setRole(v as "lister" | "seeker")} className="grid grid-cols-2 gap-3">
+                  <RadioGroup value={role} onValueChange={(v) => setRole(v as "lister" | "seeker" | "admin")} className="grid grid-cols-3 gap-3">
                     <label className="flex items-center gap-2 border border-border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="lister" id="r-lister" />
                       <span className="text-sm font-medium">Lister</span>
@@ -177,6 +196,10 @@ const Auth = () => {
                     <label className="flex items-center gap-2 border border-border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="seeker" id="r-seeker" />
                       <span className="text-sm font-medium">Seeker</span>
+                    </label>
+                    <label className="flex items-center gap-2 border border-border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="admin" id="r-admin" />
+                      <span className="text-sm font-medium">Admin</span>
                     </label>
                   </RadioGroup>
                 </div>
