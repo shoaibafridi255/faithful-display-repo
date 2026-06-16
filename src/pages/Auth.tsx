@@ -41,6 +41,18 @@ const Auth = () => {
   const [location, setLocation] = useState("");
   const [role, setRole] = useState<"lister" | "seeker" | "admin">(initialRole);
 
+  const ensureProfileAndRole = async (signedInUser: { id: string; user_metadata?: Record<string, unknown> }) => {
+    const metadata = signedInUser.user_metadata ?? {};
+    const requestedRole = (metadata.role as "lister" | "seeker" | "admin" | undefined) ?? role;
+    await supabase.from("profiles").upsert({
+      id: signedInUser.id,
+      full_name: (metadata.full_name as string | undefined) ?? fullName,
+      company: (metadata.company as string | undefined) ?? company,
+      location: (metadata.location as string | undefined) ?? location,
+    });
+    await supabase.from("user_roles").insert({ user_id: signedInUser.id, role: requestedRole });
+  };
+
   useEffect(() => {
     if (!authLoading && user) navigate("/", { replace: true });
   }, [user, authLoading, navigate]);
@@ -53,7 +65,7 @@ const Auth = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     });
@@ -62,6 +74,7 @@ const Auth = () => {
       toast.error(error.message);
       return;
     }
+    if (data.user) await ensureProfileAndRole(data.user);
     toast.success("Welcome back!");
     navigate("/");
   };
@@ -74,7 +87,7 @@ const Auth = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
@@ -92,6 +105,7 @@ const Auth = () => {
       toast.error(error.message);
       return;
     }
+    if (data.user && data.session) await ensureProfileAndRole(data.user);
     toast.success(
       parsed.data.role === "admin"
         ? "Admin account request created. Sign in after email confirmation."
