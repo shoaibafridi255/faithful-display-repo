@@ -809,6 +809,86 @@ const Admin = () => {
           </Tabs>
         </motion.div>
       </main>
+
+      <Dialog open={!!editingMaterial} onOpenChange={(open) => !open && setEditingMaterial(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Material</DialogTitle>
+          </DialogHeader>
+          {editingMaterial && (
+            <div className="space-y-4 py-2">
+              <div className="space-y-1.5">
+                <Label>Title</Label>
+                <Input
+                  value={editingMaterial.title}
+                  onChange={(e) => setEditingMaterial({ ...editingMaterial, title: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Category</Label>
+                  <Input
+                    value={editingMaterial.category}
+                    onChange={(e) => setEditingMaterial({ ...editingMaterial, category: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Status</Label>
+                  <Select
+                    value={editingMaterial.status}
+                    onValueChange={(v) => setEditingMaterial({ ...editingMaterial, status: v })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="paused">Paused</SelectItem>
+                      <SelectItem value="claimed">Claimed</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Price Type</Label>
+                  <Select
+                    value={editingMaterial.price_type}
+                    onValueChange={(v) => setEditingMaterial({ ...editingMaterial, price_type: v })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="negotiable">Negotiable</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Quantity</Label>
+                  <Input
+                    value={editingMaterial.quantity ?? ""}
+                    onChange={(e) => setEditingMaterial({ ...editingMaterial, quantity: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Location</Label>
+                <Input
+                  value={editingMaterial.location ?? ""}
+                  onChange={(e) => setEditingMaterial({ ...editingMaterial, location: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingMaterial(null)}>Cancel</Button>
+            <Button onClick={handleSaveMaterial} disabled={savingMaterial}>
+              {savingMaterial ? "Saving…" : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
