@@ -8,12 +8,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Users,
   Package,
   MessageCircle,
   BarChart3,
   Trash2,
+  Pencil,
   Leaf,
   TrendingUp,
   ShoppingCart,
@@ -21,6 +38,8 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
+  Search,
+  ShieldOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -73,6 +92,10 @@ const Admin = () => {
   const [messageCount, setMessageCount] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState("");
+  const [materialSearch, setMaterialSearch] = useState("");
+  const [editingMaterial, setEditingMaterial] = useState<MaterialRow | null>(null);
+  const [savingMaterial, setSavingMaterial] = useState(false);
 
   useEffect(() => {
     if (!authLoading && (!user || role !== "admin")) {
@@ -191,11 +214,62 @@ const Admin = () => {
   const handleDeleteMaterial = async (id: string) => {
     const { error } = await supabase.from("materials").delete().eq("id", id);
     if (error) {
-      toast.error("Failed to delete");
+      toast.error(`Failed to delete: ${error.message}`);
       return;
     }
     setMaterials((prev) => prev.filter((m) => m.id !== id));
     toast.success("Material deleted");
+  };
+
+  const handleSaveMaterial = async () => {
+    if (!editingMaterial) return;
+    setSavingMaterial(true);
+    const { id, title, category, status, price_type, location, quantity } = editingMaterial;
+    const { error } = await supabase
+      .from("materials")
+      .update({ title, category, status, price_type, location, quantity })
+      .eq("id", id);
+    setSavingMaterial(false);
+    if (error) {
+      toast.error(`Failed to update: ${error.message}`);
+      return;
+    }
+    setMaterials((prev) => prev.map((m) => (m.id === id ? { ...m, title, category, status, price_type, location, quantity } : m)));
+    setEditingMaterial(null);
+    toast.success("Material updated");
+  };
+
+  const handleRemoveUser = async (profileId: string) => {
+    if (profileId === user?.id) {
+      toast.error("You cannot remove your own admin account");
+      return;
+    }
+    const { error: matErr } = await supabase.from("materials").delete().eq("user_id", profileId);
+    if (matErr) { toast.error(`Failed: ${matErr.message}`); return; }
+    const { error: roleErr } = await supabase.from("user_roles").delete().eq("user_id", profileId);
+    if (roleErr) { toast.error(`Failed: ${roleErr.message}`); return; }
+    const { error: profErr } = await supabase.from("profiles").delete().eq("id", profileId);
+    if (profErr) { toast.error(`Failed: ${profErr.message}`); return; }
+    setUsers((prev) => prev.filter((u) => u.id !== profileId));
+    setMaterials((prev) => prev.filter((m) => m.user_id !== profileId));
+    toast.success("User removed from platform");
+  };
+
+  const handleRevokeAdmin = async (profileId: string) => {
+    if (profileId === user?.id) {
+      toast.error("You cannot revoke your own admin role");
+      return;
+    }
+    const { error } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", profileId)
+      .eq("role", "admin");
+    if (error) { toast.error(`Failed: ${error.message}`); return; }
+    setUsers((prev) => prev.map((u) => u.id === profileId
+      ? { ...u, roles: (u.roles ?? []).filter((r) => r !== "admin"), role: (u.roles ?? []).filter((r) => r !== "admin").includes("lister") ? "lister" : "seeker" }
+      : u));
+    toast.success("Admin role revoked");
   };
 
   const handleMakeAdmin = async (profileId: string) => {
@@ -219,6 +293,28 @@ const Admin = () => {
   };
 
   if (authLoading || role !== "admin") return null;
+
+  const filteredUsers = users.filter((u) => {
+    if (!userSearch.trim()) return true;
+    const q = userSearch.toLowerCase();
+    return (
+      (u.full_name ?? "").toLowerCase().includes(q) ||
+      (u.company ?? "").toLowerCase().includes(q) ||
+      (u.location ?? "").toLowerCase().includes(q) ||
+      (u.role ?? "").toLowerCase().includes(q)
+    );
+  });
+
+  const filteredMaterials = materials.filter((m) => {
+    if (!materialSearch.trim()) return true;
+    const q = materialSearch.toLowerCase();
+    return (
+      m.title.toLowerCase().includes(q) ||
+      m.category.toLowerCase().includes(q) ||
+      (m.location ?? "").toLowerCase().includes(q) ||
+      m.status.toLowerCase().includes(q)
+    );
+  });
 
   const V = ({ v }: { v: number | string }) => (
     <span>{loadingData ? "…" : v}</span>
