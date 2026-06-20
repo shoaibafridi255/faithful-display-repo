@@ -212,12 +212,12 @@ const Profile = () => {
 
     if (editingId) {
       const { error } = await supabase.from("materials").update(payload).eq("id", editingId);
-      if (error) { toast.error("Failed to update"); return; }
+      if (error) { toast.error(`Failed to update: ${error.message}`); return; }
       setMaterials((prev) => prev.map((m) => (m.id === editingId ? { ...m, ...payload } : m)));
       toast.success("Material updated!");
     } else {
       const { data, error } = await supabase.from("materials").insert(payload).select().single();
-      if (error) { toast.error("Failed to add"); return; }
+      if (error) { toast.error(`Failed to add: ${error.message}`); return; }
       setMaterials((prev) => [data, ...prev]);
       toast.success("Material added!");
     }
@@ -226,7 +226,7 @@ const Profile = () => {
 
   const handleDeleteMaterial = async (id: string) => {
     const { error } = await supabase.from("materials").delete().eq("id", id);
-    if (error) { toast.error("Failed to delete"); return; }
+    if (error) { toast.error(`Failed to delete: ${error.message}`); return; }
     setMaterials((prev) => prev.filter((m) => m.id !== id));
     toast.success("Material deleted");
   };

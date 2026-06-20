@@ -21,7 +21,7 @@ const signUpSchema = signInSchema.extend({
   fullName: z.string().trim().min(1, "Name is required").max(100),
   company: z.string().trim().max(100).optional(),
   location: z.string().trim().max(100).optional(),
-  role: z.enum(["lister", "seeker", "admin"]),
+  role: z.enum(["lister", "seeker"]),
 });
 
 const Auth = () => {
@@ -29,7 +29,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const initialTab = searchParams.get("mode") === "signup" ? "signup" : "signin";
-  const initialRole = searchParams.get("role") === "admin" ? "admin" : "seeker";
+  const initialRole: "lister" | "seeker" = "seeker";
   const [tab, setTab] = useState(initialTab);
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,11 +39,12 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
-  const [role, setRole] = useState<"lister" | "seeker" | "admin">(initialRole);
+  const [role, setRole] = useState<"lister" | "seeker">(initialRole);
 
   const ensureProfileAndRole = async (signedInUser: { id: string; user_metadata?: Record<string, unknown> }) => {
     const metadata = signedInUser.user_metadata ?? {};
-    const requestedRole = (metadata.role as "lister" | "seeker" | "admin" | undefined) ?? role;
+    const rawRole = (metadata.role as string | undefined) ?? role;
+    const requestedRole: "lister" | "seeker" = rawRole === "lister" ? "lister" : "seeker";
     await supabase.from("profiles").upsert({
       id: signedInUser.id,
       full_name: (metadata.full_name as string | undefined) ?? fullName,
@@ -106,11 +107,7 @@ const Auth = () => {
       return;
     }
     if (data.user && data.session) await ensureProfileAndRole(data.user);
-    toast.success(
-      parsed.data.role === "admin"
-        ? "Admin account request created. Sign in after email confirmation."
-        : "Account created! Check your email to confirm."
-    );
+    toast.success("Account created! Check your email to confirm.");
     setTab("signin");
   };
 
@@ -188,7 +185,7 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>I am a</Label>
-                  <RadioGroup value={role} onValueChange={(v) => setRole(v as "lister" | "seeker" | "admin")} className="grid grid-cols-3 gap-3">
+                  <RadioGroup value={role} onValueChange={(v) => setRole(v as "lister" | "seeker")} className="grid grid-cols-2 gap-3">
                     <label className="flex items-center gap-2 border border-border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="lister" id="r-lister" />
                       <span className="text-sm font-medium">Lister</span>
@@ -196,10 +193,6 @@ const Auth = () => {
                     <label className="flex items-center gap-2 border border-border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="seeker" id="r-seeker" />
                       <span className="text-sm font-medium">Seeker</span>
-                    </label>
-                    <label className="flex items-center gap-2 border border-border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
-                      <RadioGroupItem value="admin" id="r-admin" />
-                      <span className="text-sm font-medium">Admin</span>
                     </label>
                   </RadioGroup>
                 </div>
