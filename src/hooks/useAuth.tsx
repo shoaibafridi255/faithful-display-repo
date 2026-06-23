@@ -8,6 +8,7 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   role: Role;
+  avatarUrl: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
@@ -18,14 +19,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<Role>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadRole = async (userId: string) => {
-    const { data } = await supabase
+  const loadProfile = async (userId: string) => {
+    const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
-    const roles = (data ?? []).map((r: { role: string }) => r.role);
+    const roles = (roleData ?? []).map((r: { role: string }) => r.role);
     const best = roles.includes("admin")
       ? "admin"
       : roles.includes("lister")
@@ -34,6 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ? "seeker"
           : null;
     setRole(best as Role);
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+    setAvatarUrl(profileData?.avatar_url ?? null);
   };
 
   useEffect(() => {
@@ -43,12 +52,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
-        // Defer role fetch to avoid deadlocks
+        // Defer profile fetch to avoid deadlocks
         setTimeout(() => {
-          loadRole(newSession.user.id).finally(() => setLoading(false));
+          loadProfile(newSession.user.id).finally(() => setLoading(false));
         }, 0);
       } else {
         setRole(null);
+        setAvatarUrl(null);
         setLoading(false);
       }
     });
@@ -58,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(existing);
       setUser(existing?.user ?? null);
       if (existing?.user) {
-        await loadRole(existing.user.id);
+        await loadProfile(existing.user.id);
       }
       setLoading(false);
     });
@@ -71,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, avatarUrl, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
