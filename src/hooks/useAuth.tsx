@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(existing);
       setUser(existing?.user ?? null);
       if (existing?.user) {
-        await loadProfile(existing.user.id);
+        await loadProfile(existing.user.id, existing.user.user_metadata);
       }
       setLoading(false);
     });
