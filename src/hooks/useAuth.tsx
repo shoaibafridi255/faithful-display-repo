@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (newSession?.user) {
         // Defer profile fetch to avoid deadlocks
         setTimeout(() => {
-          loadProfile(newSession.user.id).finally(() => setLoading(false));
+          loadProfile(newSession.user.id, newSession.user.user_metadata).finally(() => setLoading(false));
         }, 0);
       } else {
         setRole(null);
