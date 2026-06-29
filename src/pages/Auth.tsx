@@ -80,6 +80,24 @@ const Auth = () => {
     navigate("/");
   };
 
+  const handleForgotPassword = async () => {
+    const parsed = z.string().trim().email().safeParse(email);
+    if (!parsed.success) {
+      toast.error("Enter your email above first, then click Forgot password.");
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Password reset email sent. Check your inbox.");
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = signUpSchema.safeParse({ email, password, fullName, company, location, role });
@@ -156,6 +174,13 @@ const Auth = () => {
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Sign In
                 </Button>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-muted-foreground hover:text-foreground underline w-full text-center"
+                >
+                  Forgot password?
+                </button>
               </form>
             </TabsContent>
 
