@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Recycle, Search, LogOut, User, MessageCircle, Shield } from "lucide-react";
+import {
+  Menu,
+  X,
+  Recycle,
+  Search,
+  LogOut,
+  User,
+  MessageCircle,
+  Shield,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -77,15 +86,27 @@ const Navbar = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)} aria-label="Search">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+            >
               <Search className="w-5 h-5" />
             </Button>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 p-0 overflow-hidden">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10 p-0 overflow-hidden"
+                  >
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={avatarUrl ?? undefined} alt={user.email ?? "User"} />
+                      <AvatarImage
+                        src={avatarUrl ?? undefined}
+                        alt={user.email ?? "User"}
+                      />
                       <AvatarFallback className="bg-muted text-foreground">
                         <User className="w-5 h-5" />
                       </AvatarFallback>
@@ -97,21 +118,33 @@ const Navbar = () => {
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/profile")}
+                    className="cursor-pointer"
+                  >
                     <User className="w-4 h-4 mr-2" />
                     My Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/messages")} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/messages")}
+                    className="cursor-pointer"
+                  >
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Messages
                   </DropdownMenuItem>
                   {role === "admin" && (
-                    <DropdownMenuItem onClick={() => navigate("/admin")} className="cursor-pointer">
+                    <DropdownMenuItem
+                      onClick={() => navigate("/admin")}
+                      className="cursor-pointer"
+                    >
                       <Shield className="w-4 h-4 mr-2" />
                       Admin Dashboard
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="cursor-pointer"
+                  >
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
@@ -119,8 +152,15 @@ const Navbar = () => {
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="outline" onClick={() => navigate("/auth")}>Sign In</Button>
-                <Button variant="eco" onClick={() => navigate("/auth?mode=signup")}>Get Started</Button>
+                <Button variant="outline" onClick={() => navigate("/auth")}>
+                  Sign In
+                </Button>
+                <Button
+                  variant="eco"
+                  onClick={() => navigate("/auth?mode=signup")}
+                >
+                  Get Started
+                </Button>
               </>
             )}
           </div>
@@ -167,27 +207,69 @@ const Navbar = () => {
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 {user ? (
                   <>
-                    <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); navigate("/profile"); }}>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate("/profile");
+                      }}
+                    >
                       <User className="w-4 h-4 mr-2" /> My Profile
                     </Button>
-                    <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); navigate("/messages"); }}>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate("/messages");
+                      }}
+                    >
                       <MessageCircle className="w-4 h-4 mr-2" /> Messages
                     </Button>
                     {role === "admin" && (
-                      <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); navigate("/admin"); }}>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setIsOpen(false);
+                          navigate("/admin");
+                        }}
+                      >
                         <Shield className="w-4 h-4 mr-2" /> Admin
                       </Button>
                     )}
-                    <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); handleSignOut(); }}>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleSignOut();
+                      }}
+                    >
                       <LogOut className="w-4 h-4 mr-2" /> Sign Out
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" className="w-full" onClick={() => { setIsOpen(false); navigate("/auth"); }}>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate("/auth");
+                      }}
+                    >
                       Sign In
                     </Button>
-                    <Button variant="eco" className="w-full" onClick={() => { setIsOpen(false); navigate("/auth?mode=signup"); }}>
+                    <Button
+                      variant="eco"
+                      className="w-full"
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate("/auth?mode=signup");
+                      }}
+                    >
                       Get Started
                     </Button>
                   </>
@@ -209,18 +291,46 @@ const Navbar = () => {
           }}
         />
         <CommandList>
-          <CommandEmpty>No results found. Press Enter to search browse.</CommandEmpty>
+          <CommandEmpty>
+            No results found. Press Enter to search browse.
+          </CommandEmpty>
           <CommandGroup heading="Categories">
-            <CommandItem onSelect={() => goToBrowse("metals")}>Metals & Scrap</CommandItem>
-            <CommandItem onSelect={() => goToBrowse("wood")}>Wood & Timber</CommandItem>
-            <CommandItem onSelect={() => goToBrowse("textiles")}>Textiles & Fabrics</CommandItem>
-            <CommandItem onSelect={() => goToBrowse("plastics")}>Plastics</CommandItem>
-            <CommandItem onSelect={() => goToBrowse("paper")}>Paper & Cardboard</CommandItem>
-            <CommandItem onSelect={() => goToBrowse("glass")}>Glass</CommandItem>
+            <CommandItem onSelect={() => goToBrowse("metals")}>
+              Metals & Scrap
+            </CommandItem>
+            <CommandItem onSelect={() => goToBrowse("wood")}>
+              Wood & Timber
+            </CommandItem>
+            <CommandItem onSelect={() => goToBrowse("textiles")}>
+              Textiles & Fabrics
+            </CommandItem>
+            <CommandItem onSelect={() => goToBrowse("plastics")}>
+              Plastics
+            </CommandItem>
+            <CommandItem onSelect={() => goToBrowse("paper")}>
+              Paper & Cardboard
+            </CommandItem>
+            <CommandItem onSelect={() => goToBrowse("glass")}>
+              Glass
+            </CommandItem>
           </CommandGroup>
           <CommandGroup heading="Quick Links">
-            <CommandItem onSelect={() => { setSearchOpen(false); navigate("/how-it-works"); }}>How It Works</CommandItem>
-            <CommandItem onSelect={() => { setSearchOpen(false); navigate("/about"); }}>About EcoLink</CommandItem>
+            <CommandItem
+              onSelect={() => {
+                setSearchOpen(false);
+                navigate("/how-it-works");
+              }}
+            >
+              How It Works
+            </CommandItem>
+            <CommandItem
+              onSelect={() => {
+                setSearchOpen(false);
+                navigate("/about");
+              }}
+            >
+              About EcoLink
+            </CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>

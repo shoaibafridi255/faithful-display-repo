@@ -120,7 +120,7 @@ const Footer = () => {
                   className="flex items-center gap-2 text-background/60 hover:text-background transition-colors text-sm"
                 >
                   <Mail className="w-4 h-4" />
-                  info@ecolink.pk
+                  shoaibafridi150@gmail.com
                 </a>
               </li>
               <li>
@@ -129,7 +129,7 @@ const Footer = () => {
                   className="flex items-center gap-2 text-background/60 hover:text-background transition-colors text-sm"
                 >
                   <Phone className="w-4 h-4" />
-                  +92 300 1234567
+                  +92 313 9293487
                 </a>
               </li>
             </ul>
