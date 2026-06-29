@@ -174,6 +174,13 @@ const Auth = () => {
                   {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                   Sign In
                 </Button>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-muted-foreground hover:text-foreground underline w-full text-center"
+                >
+                  Forgot password?
+                </button>
               </form>
             </TabsContent>
 
